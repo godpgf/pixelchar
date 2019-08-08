@@ -1,0 +1,1 @@
+from .char_classification_model import CharClassificationModel
