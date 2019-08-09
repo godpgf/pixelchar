@@ -119,7 +119,7 @@ class CharClassificationModel(object):
 
     def fit(self, train_data_source_factory, eval_data_source_factory=None, train_loss_name="loss",
             eval_loss_name="loss", label_name="label", p_label_name="predict", epoch_num=8, optim_name="train_optimzer",
-            eval_fun_dict=None):
+            char_eval=None):
         train_data_name_list = self._get_data_name_list([train_loss_name, label_name, p_label_name])
         train_data_source = train_data_source_factory(train_data_name_list)
         if eval_data_source_factory is not None:
@@ -130,21 +130,6 @@ class CharClassificationModel(object):
                 if not self.is_load:
                     self.sess.run(tf.global_variables_initializer())
                 for epoch_index in range(epoch_num):
-                    eval_dict = {
-                        "avg_loss": 0.0
-                    }
-                    if eval_fun_dict:
-                        for key, _ in eval_fun_dict.items():
-                            eval_dict[key] = 0.0
-
-                    cnt = 0
-
-                    def fill_eval_data(loss, predict, label):
-                        eval_dict["avg_loss"] += loss
-                        if eval_fun_dict:
-                            for key, eval_fun in eval_fun_dict.items():
-                                eval_dict[key] += eval_fun(predict, label)
-
                     train_data_iter = iter(train_data_source)
                     while True:
                         try:
@@ -153,9 +138,8 @@ class CharClassificationModel(object):
                             loss, _, predict = self.sess.run(
                                 [self.db[train_loss_name], self.db[optim_name], self.db[p_label_name]],
                                 feed_dict=feed_dict)
-                            if eval_data_source_factory is None:
-                                fill_eval_data(loss, predict, label)
-                                cnt += 1
+                            if eval_data_source_factory is None and char_eval is not None:
+                                char_eval.push(loss, predict, label)
                         except StopIteration as e:
                             break
 
@@ -167,13 +151,13 @@ class CharClassificationModel(object):
                                 label = feed_dict[self.db[label_name]]
                                 loss, predict = self.sess.run([self.db[eval_loss_name], self.db[p_label_name]],
                                                            feed_dict=feed_dict)
-                                fill_eval_data(loss, predict, label)
-                                cnt += 1
+                                if char_eval is not None:
+                                    char_eval.push(loss, predict, label)
                             except StopIteration as e:
                                 break
 
-                    print("epoch %d" % epoch_index,
-                          '\t'.join(["%s: %.4f" % (key, value / (cnt + 0.0001)) for key, value in eval_dict.items()]))
+                    if char_eval is not None:
+                        print("epoch %d\t%s" % (epoch_index, char_eval.pop()))
 
     def feed_data(self, data_iter, data_name_list):
         data_value_list = next(data_iter)

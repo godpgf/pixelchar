@@ -16,12 +16,21 @@ class DataMeta(object):
         return SeqDataMeta(name, seq_length, max_item_size)
 
     @classmethod
-    def create_continuous_bar_data_meta(cls, name, height, data):
+    def create_std_bar_data_meta(cls, name, width, height, std):
+        bar_range_list = [-3 * std, -2.5 * std, -2*std]
+        sub_bar_num = height - 6
+        for i in range(1, sub_bar_num):
+            bar_range_list.append(4 * std * i / sub_bar_num - 2 * std)
+        bar_range_list.append(2 * std, 2.5 * std, 3 * std)
+        return cls.create_bar_data_meta(name, width, height, bar_range_list)
+
+    @classmethod
+    def create_continuous_bar_data_meta(cls, name, height, data, is_avg_dis=True):
         width = data.shape[1]
         data = np.reshape(np.array([(np.max(d), np.min(d)) for d in data]), newshape=[-1])
         argsort_ids = np.argsort(data)
         bar_range_list = []
-        if height < 6:
+        if height < 6 or is_avg_dis:
             for i in range(1, height):
                 bar_range_list.append(data[argsort_ids[(i * len(data)) // height]])
         else:

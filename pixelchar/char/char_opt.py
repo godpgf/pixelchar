@@ -29,7 +29,7 @@ def reshape(coff_list):
 
 def adam_optim(coff_list):
     lr = coff_list[0][1]
-    return tf.train.AdadeltaOptimizer(learning_rate=lr)
+    return tf.train.AdamOptimizer(lr, name='Adam')
 
 
 def minimize(coff_list):
