@@ -8,8 +8,9 @@ class CharClassificationModel(CharModel):
         self.is_load = False
 
     def fit(self, train_data_source_factory, eval_data_source_factory=None, train_loss_name="loss",
-            eval_loss_name="loss", label_name="label", p_label_name="predict", epoch_num=8, optim_name="train_optimzer",
+            eval_loss_name="loss", label_name="label", p_label_name="predict", epoch_num="epoch_num", optim_name="train_optimzer",
             char_eval=None):
+        epoch_num = int(self.db[epoch_num])
         train_data_name_list = self._get_data_name_list([train_loss_name, label_name, p_label_name])
         train_data_source = train_data_source_factory(train_data_name_list)
         if eval_data_source_factory is not None:
