@@ -21,7 +21,7 @@ class DataMeta(object):
         sub_bar_num = height - 6
         for i in range(1, sub_bar_num):
             bar_range_list.append(4 * std * i / sub_bar_num - 2 * std)
-        bar_range_list.append(2 * std, 2.5 * std, 3 * std)
+        bar_range_list.extend([2 * std, 2.5 * std, 3 * std])
         return cls.create_bar_data_meta(name, width, height, bar_range_list)
 
     @classmethod
