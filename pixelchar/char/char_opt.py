@@ -11,6 +11,16 @@ def array(coff_list):
     return [coff[1] for coff in coff_list]
 
 
+def get_value(coff_list):
+    value_array = coff_list[0][1]
+    return value_array[int(coff_list[1][1])]
+
+
+def set_value(coff_list):
+    return (coff_list[0][1],
+            coff_list[0][2])
+
+
 def reduce_sum(coff_list):
     return tf.reduce_sum(coff_list[0][1], axis=int(coff_list[1][1]) if len(coff_list) > 1 else 0)
 

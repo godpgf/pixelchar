@@ -24,6 +24,8 @@ class CharModel(object):
             "dot": dot,
             "matrix": matrix,
             "array": array,
+            "get": get_value,
+            "set": set_value,
             "reduce_sum": reduce_sum,
             "reduce_mean": reduce_mean,
             "embedding_lookup": embedding_lookup,
@@ -73,7 +75,13 @@ class CharModel(object):
                     res = v1[1] / v2[1]
                 else:
                     res = v2[1]
-                    self.db[v1[0]] = res
+                    if v1[0] == "set":
+                        # 设置数组中的某个元素
+                        value_array = v1[1][0]
+                        value_index = int(v1[1][1])
+                        value_array[value_index] = res
+                    else:
+                        self.db[v1[0]] = res
                 coff_list.append((opt, res))
             elif opt == "@":
                 # 遇到函数开始标记
