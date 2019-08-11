@@ -1,11 +1,9 @@
 from .char_model import CharModel
-from .char_opt import *
 
 
 class CharClassificationModel(CharModel):
     def __init__(self, data_meta_dict, model_text):
         super(CharClassificationModel, self).__init__(data_meta_dict, model_text)
-        self.is_load = False
 
     def fit(self, train_data_source_factory, eval_data_source_factory=None, train_loss_name="loss",
             eval_loss_name="loss", label_name="label", p_label_name="predict", epoch_num="epoch_num", optim_name="train_optimzer",
@@ -18,8 +16,7 @@ class CharClassificationModel(CharModel):
             eval_data_source = eval_data_source_factory(eval_data_name_list)
         with self.sess.as_default():
             with self.graph.as_default():
-                if not self.is_load:
-                    self.sess.run(tf.global_variables_initializer())
+                self.initialize()
                 for epoch_index in range(epoch_num):
                     train_data_iter = iter(train_data_source)
                     while True:

@@ -1,5 +1,12 @@
 from rpn import rpn_encode
 from .char_opt import *
+import os
+
+
+def check_path(ckpt_file_path):
+    path = os.path.dirname(os.path.abspath(ckpt_file_path))
+    if os.path.isdir(path) is False:
+        os.makedirs(path)
 
 
 class CharModel(object):
@@ -11,6 +18,7 @@ class CharModel(object):
         self.db = dict()
         self.opt_dict = self._create_char_opt()
         self.rpn_opt_dict = {}
+        self.is_load = False
         with self.sess.as_default():
             with self.graph.as_default():
                 self._create_placeholder()
@@ -125,3 +133,20 @@ class CharModel(object):
         data_value_list = next(data_iter)
         feed_dict = {self.db[data_name]: data_value for data_value, data_name in zip(data_value_list, data_name_list)}
         return feed_dict
+
+    def initialize(self):
+        if not self.is_load:
+            self.sess.run(tf.global_variables_initializer())
+            self.is_load = True
+
+    def save(self, ckpt_file_path):
+        check_path(ckpt_file_path)
+        with self.sess.as_default():
+            with self.graph.as_default():
+                tf.train.Saver().save(self.sess, ckpt_file_path)
+
+    def load(self, ckpt_file_path):
+        with self.sess.as_default():
+            with self.graph.as_default():
+                tf.train.Saver().restore(self.sess, ckpt_file_path)
+                self.is_load = True
