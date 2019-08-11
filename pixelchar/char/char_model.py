@@ -41,6 +41,7 @@ class CharModel(object):
             "concat": concat,
             "matmul": matmul,
             "sigmoid": sigmoid,
+            "relu": relu,
             "embed_matrix": lambda coff_list: embed_matrix(self.data_meta_dict, coff_list),
             "sigmoid_cross_entropy_with_logits": sigmoid_cross_entropy_with_logits,
         }

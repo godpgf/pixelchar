@@ -83,5 +83,9 @@ def sigmoid(coff_list):
     return tf.nn.sigmoid(coff_list[0][1])
 
 
+def relu(coff_list):
+    return tf.nn.relu(coff_list[0][1])
+
+
 def sigmoid_cross_entropy_with_logits(coff_list):
     return tf.nn.sigmoid_cross_entropy_with_logits(labels=coff_list[0][1], logits=coff_list[1][1])
