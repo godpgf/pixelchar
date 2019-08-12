@@ -7,7 +7,7 @@ class CharClassificationModel(CharModel):
 
     def fit(self, train_data_source_factory, eval_data_source_factory=None, train_loss_name="loss",
             eval_loss_name="loss", label_name="label", p_label_name="predict", epoch_num="epoch_num", optim_name="train_optimzer",
-            char_eval=None):
+            char_eval_list=None):
         epoch_num = int(self.db[epoch_num])
         train_data_name_list = self._get_data_name_list([train_loss_name, label_name, p_label_name])
         train_data_source = train_data_source_factory(train_data_name_list)
@@ -26,8 +26,9 @@ class CharClassificationModel(CharModel):
                             loss, _, predict = self.sess.run(
                                 [self.db[train_loss_name], self.db[optim_name], self.db[p_label_name]],
                                 feed_dict=feed_dict)
-                            if eval_data_source_factory is None and char_eval is not None:
-                                char_eval.push(loss, predict, label)
+                            if eval_data_source_factory is None and char_eval_list is not None:
+                                for char_eval in char_eval_list:
+                                    char_eval.push(loss, predict, label)
                         except StopIteration as e:
                             break
 
@@ -39,13 +40,15 @@ class CharClassificationModel(CharModel):
                                 label = feed_dict[self.db[label_name]]
                                 loss, predict = self.sess.run([self.db[eval_loss_name], self.db[p_label_name]],
                                                            feed_dict=feed_dict)
-                                if char_eval is not None:
-                                    char_eval.push(loss, predict, label)
+                                if char_eval_list is not None:
+                                    for char_eval in char_eval_list:
+                                        char_eval.push(loss, predict, label)
                             except StopIteration as e:
                                 break
 
-                    if char_eval is not None:
-                        print("epoch %d\t%s" % (epoch_index, char_eval.pop()))
+                    if char_eval_list is not None:
+                        res_list = [char_eval.pop() for char_eval in char_eval_list]
+                        print("epoch %d\t%s" % (epoch_index, "\t".join(res_list)))
 
     def predict(self, data_source_factory, p_label_name="predict"):
         data_name_list = self._get_data_name_list([p_label_name])
