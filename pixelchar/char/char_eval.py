@@ -45,15 +45,15 @@ class AUCCharEval(CharEval):
         return auc
 
 
-class PrecisionCharEval(CharEval):
+class HitCharEval(CharEval):
     def __init__(self):
-        super(PrecisionCharEval, self).__init__()
+        super(HitCharEval, self).__init__()
         self.base_p = [0.5, 0.6, 0.7, 0.8, 0.9]
         self.tp_fp_list = [0, 0, 0, 0, 0]
         self.tp_list = [0, 0, 0, 0, 0]
 
     def push(self, loss, predict, label):
-        super(PrecisionCharEval, self).push(loss, predict, label)
+        super(HitCharEval, self).push(loss, predict, label)
         # 精确率
         for p, l in zip(predict, label):
             for i in range(len(self.base_p)):
@@ -67,5 +67,36 @@ class PrecisionCharEval(CharEval):
         for i in range(len(self.base_p)):
             self.tp_list[i] = 0
             self.tp_fp_list[i] = 0
-        super(PrecisionCharEval, self).pop()
+        super(HitCharEval, self).pop()
         return '\t'.join(hit_list)
+
+
+class PrecisionCharEval(CharEval):
+    def __init__(self):
+        super(PrecisionCharEval, self).__init__()
+        self.threshold_list = [0.5, 0.6, 0.7, 0.8, 0.9]
+        self.p_list = [0.0, 0.0, 0.0, 0.0, 0.0]
+        self.p_cnt_list = [0, 0, 0, 0, 0]
+
+    def push(self, loss, predict, label):
+        super(PrecisionCharEval, self).push(loss, predict, label)
+        # 精确率
+        for id, threshold in enumerate(self.threshold_list):
+            tp_fp = 0
+            tp = 0
+            for p, l in zip(predict, label):
+                if p > threshold:
+                    tp_fp += 1
+                    if l > 0.5:
+                        tp += 1
+            if tp_fp > 0:
+                self.p_list[id] += tp / tp_fp
+                self.p_cnt_list[id] += 1
+
+    def pop(self):
+        p_list = ["Precision%.1f:%.4f" % (self.threshold_list[i], self.p_list[i] / (self.p_cnt_list[i] + 0.0001)) for i in range(len(self.threshold_list))]
+        for i in range(len(self.threshold_list)):
+            self.p_list[i] = 0
+            self.p_cnt_list[i] = 0
+        super(PrecisionCharEval, self).pop()
+        return '\t'.join(p_list)
