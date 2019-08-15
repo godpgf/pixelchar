@@ -61,13 +61,26 @@ def embed_matrix(data_meta_dict, coff_list):
 
 
 def l2_loss(coff_list):
-    return tf.nn.l2_loss(coff_list[0][1])
+    v = coff_list[0][1]
+    if isinstance(v, list):
+        r = tf.nn.l2_loss(v[0])
+        for i in range(1, len(v)):
+            r = r + tf.nn.l2_loss(v[i])
+        return r
+    else:
+        return tf.nn.l2_loss(v)
 
 
 def dot(coff_list):
     v0 = coff_list[0][1]
     v1 = coff_list[1][1]
-    return tf.reshape(tf.reduce_sum(v0 * v1, axis=1), shape=[-1, 1])
+    if isinstance(v0, list) and isinstance(v1, list):
+        r = tf.reshape(tf.reduce_sum(v0[0] * v1[0], axis=1), shape=[-1, 1])
+        for i in range(1, len(v0)):
+            r = r + tf.reshape(tf.reduce_sum(v0[i] * v1[i], axis=1), shape=[-1, 1])
+        return r
+    else:
+        return tf.reshape(tf.reduce_sum(v0 * v1, axis=1), shape=[-1, 1])
 
 
 def concat(coff_list):
