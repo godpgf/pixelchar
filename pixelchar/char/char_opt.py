@@ -42,6 +42,11 @@ def adam_optim(coff_list):
     return tf.train.AdamOptimizer(lr, name='Adam')
 
 
+def ftrl_optim(coff_list):
+    lr = coff_list[0][1]
+    return tf.train.FtrlOptimizer(lr, name='Ftrl')
+
+
 def minimize(coff_list):
     optim = coff_list[0][1]
     value = coff_list[1][1]
@@ -69,6 +74,17 @@ def l2_loss(coff_list):
         return r
     else:
         return tf.nn.l2_loss(v)
+
+
+def l1_loss(coff_list):
+    v = coff_list[0][1]
+    if isinstance(v, list):
+        r = tf.reduce_mean(tf.abs(tf.reshape(v[0], [-1])), 0)
+        for i in range(1, len(v)):
+            r = r + tf.reduce_mean(tf.abs(tf.reshape(v[i], [-1])), 0)
+        return r
+    else:
+        return tf.reduce_mean(tf.abs(tf.reshape(v, [-1])), 0)
 
 
 def add_n(coff_list):
@@ -101,9 +117,20 @@ def sigmoid(coff_list):
     return tf.nn.sigmoid(coff_list[0][1])
 
 
+def softmax(coff_list):
+    return tf.nn.softmax(coff_list[0][1])
+
+
 def relu(coff_list):
     return tf.nn.relu(coff_list[0][1])
 
 
 def sigmoid_cross_entropy_with_logits(coff_list):
     return tf.nn.sigmoid_cross_entropy_with_logits(labels=coff_list[0][1], logits=coff_list[1][1])
+
+
+def cross_entropy_with_logits(coff_list):
+    # 注意没有sigmoid
+    z = coff_list[0][1]
+    x = coff_list[1][1]
+    return z * -tf.log(x) + (1 - z) * -tf.log(1 - x)

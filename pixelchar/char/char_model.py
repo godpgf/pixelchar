@@ -27,8 +27,10 @@ class CharModel(object):
     def _create_char_opt(self):
         opt_dict = {
             "adam_optim": adam_optim,
+            "ftrl_optim": ftrl_optim,
             "minimize": minimize,
             "l2_loss": l2_loss,
+            "l1_loss": l1_loss,
             "add_n": add_n,
             "dot": dot,
             "matrix": matrix,
@@ -42,9 +44,11 @@ class CharModel(object):
             "concat": concat,
             "matmul": matmul,
             "sigmoid": sigmoid,
+            "softmax": softmax,
             "relu": relu,
             "embed_matrix": lambda coff_list: embed_matrix(self.data_meta_dict, coff_list),
             "sigmoid_cross_entropy_with_logits": sigmoid_cross_entropy_with_logits,
+            "cross_entropy_with_logits": cross_entropy_with_logits,
         }
         return opt_dict
 
