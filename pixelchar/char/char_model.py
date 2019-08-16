@@ -29,6 +29,7 @@ class CharModel(object):
             "adam_optim": adam_optim,
             "minimize": minimize,
             "l2_loss": l2_loss,
+            "add_n": add_n,
             "dot": dot,
             "matrix": matrix,
             "array": array,

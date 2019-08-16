@@ -71,6 +71,11 @@ def l2_loss(coff_list):
         return tf.nn.l2_loss(v)
 
 
+def add_n(coff_list):
+    c_list = [v for v in coff_list[0][1]]
+    return tf.add_n(c_list)
+
+
 def dot(coff_list):
     v0 = coff_list[0][1]
     v1 = coff_list[1][1]
