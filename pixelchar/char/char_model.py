@@ -40,13 +40,18 @@ class CharModel(object):
             "reduce_sum": reduce_sum,
             "reduce_mean": reduce_mean,
             "embedding_lookup": embedding_lookup,
+            "ffm_embedding_lookup": ffm_embedding_lookup,
             "reshape": reshape,
             "concat": concat,
             "matmul": matmul,
             "sigmoid": sigmoid,
             "softmax": softmax,
             "relu": relu,
+            "tanh": tanh,
+            "fm": fm,
+            "ffm": ffm,
             "embed_matrix": lambda coff_list: embed_matrix(self.data_meta_dict, coff_list),
+            "ffm_embed_matrix": lambda coff_list: ffm_embed_matrix(self.data_meta_dict, coff_list),
             "sigmoid_cross_entropy_with_logits": sigmoid_cross_entropy_with_logits,
             "cross_entropy_with_logits": cross_entropy_with_logits,
         }
@@ -109,7 +114,7 @@ class CharModel(object):
                 coff_list.pop()
                 opt = opt[1:]
                 res = self.opt_dict[opt](fun_coff_list)
-                coff_list.append((opt, res))
+                coff_list.append(("%s:%s" % (opt, ",".join([d[0] for d in fun_coff_list])), res))
             else:
                 # 剩下的只有操作数
                 if isinstance(opt, float):

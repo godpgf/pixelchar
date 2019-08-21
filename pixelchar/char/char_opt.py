@@ -22,15 +22,41 @@ def set_value(coff_list):
 
 
 def reduce_sum(coff_list):
-    return tf.reduce_sum(coff_list[0][1], axis=int(coff_list[1][1]) if len(coff_list) > 1 else 0)
+    if isinstance(coff_list[0][1], list):
+        return [tf.reduce_sum(a, axis=int(coff_list[1][1]) if len(coff_list) > 1 else 0) for a in coff_list[0][1]]
+    else:
+        return tf.reduce_sum(coff_list[0][1], axis=int(coff_list[1][1]) if len(coff_list) > 1 else 0)
 
 
 def reduce_mean(coff_list):
-    return tf.reduce_mean(coff_list[0][1], axis=int(coff_list[1][1]) if len(coff_list) > 1 else 0)
+    if isinstance(coff_list[0][1], list):
+        return [tf.reduce_mean(a, axis=int(coff_list[1][1]) if len(coff_list) > 1 else 0) for a in coff_list[0][1]]
+    else:
+        return tf.reduce_mean(coff_list[0][1], axis=int(coff_list[1][1]) if len(coff_list) > 1 else 0)
 
 
 def embedding_lookup(coff_list):
-    return tf.nn.embedding_lookup(coff_list[0][1], coff_list[1][1])
+    if isinstance(coff_list[0][1], list):
+        return [tf.nn.embedding_lookup(a, b) for a, b in zip(coff_list[0][1], coff_list[1][1])]
+    else:
+        return tf.nn.embedding_lookup(coff_list[0][1], coff_list[1][1])
+
+
+def ffm_embedding_lookup(coff_list):
+    fid = 0
+    res_list = []
+    for i in range(len(coff_list[1][1]) - 1):
+        for j in range(i + 1, len(coff_list[1][1])):
+            a = coff_list[0][1][fid]
+            b = coff_list[1][1][i]
+            res_list.append(tf.nn.embedding_lookup(a, b))
+            fid += 1
+
+            a = coff_list[0][1][fid]
+            b = coff_list[1][1][j]
+            res_list.append(tf.nn.embedding_lookup(a, b))
+            fid += 1
+    return res_list
 
 
 def reshape(coff_list):
@@ -53,16 +79,40 @@ def minimize(coff_list):
     return optim.minimize(value)
 
 
-def embed_matrix(data_meta_dict, coff_list):
-    embed_size = int(coff_list[1][1])
-    stddev = coff_list[2][1] if len(coff_list) > 2 else 0.02
-    data_meta = data_meta_dict[coff_list[0][0]]
+def _create_mat(data_meta, embed_size, stddev):
     if isinstance(data_meta, BarDataMeta):
         return tf.Variable(
             tf.truncated_normal(shape=[data_meta.width * data_meta.height, embed_size], stddev=stddev))
     elif isinstance(data_meta, SeqDataMeta):
         return tf.Variable(
             tf.truncated_normal(shape=[data_meta.max_item_size, embed_size], stddev=stddev))
+
+
+def embed_matrix(data_meta_dict, coff_list):
+    embed_size = int(coff_list[1][1])
+    stddev = coff_list[2][1] if len(coff_list) > 2 else 0.02
+    if isinstance(coff_list[0][1], list):
+        name_list = coff_list[0][0].split(':')[1].split(',')
+        data_meta_list = [data_meta_dict[name] for name in name_list]
+        matrix_list = []
+        for data_meta in data_meta_list:
+            matrix_list.append(_create_mat(data_meta, embed_size, stddev))
+        return matrix_list
+    else:
+        return _create_mat(data_meta_dict[coff_list[0][0]], embed_size, stddev)
+
+
+def ffm_embed_matrix(data_meta_dict, coff_list):
+    embed_size = int(coff_list[1][1])
+    stddev = coff_list[2][1] if len(coff_list) > 2 else 0.02
+    name_list = coff_list[0][0].split(':')[1].split(',')
+    data_meta_list = [data_meta_dict[name] for name in name_list]
+    matrix_list = []
+    for i in range(0, len(data_meta_list) - 1):
+        for j in range(i+1, len(data_meta_list)):
+            matrix_list.append(_create_mat(data_meta_list[i], embed_size, stddev))
+            matrix_list.append(_create_mat(data_meta_list[j], embed_size, stddev))
+    return matrix_list
 
 
 def l2_loss(coff_list):
@@ -123,6 +173,27 @@ def softmax(coff_list):
 
 def relu(coff_list):
     return tf.nn.relu(coff_list[0][1])
+
+
+def tanh(coff_list):
+    return tf.nn.tanh(coff_list[0][1])
+
+
+def fm(coff_list):
+    tf_list = [c for c in coff_list[0][1]]
+    res_list = []
+    for i in range(0, len(tf_list) - 1):
+        for j in range(i + 1, len(tf_list)):
+            res_list.append(tf.reshape(tf.reduce_sum(tf_list[i] * tf_list[j], axis=1), shape=[-1, 1]))
+    return res_list
+
+
+def ffm(coff_list):
+    tf_list = [c for c in coff_list[0][1]]
+    res_list = []
+    for i in range(0, len(tf_list), 2):
+        res_list.append(tf.reshape(tf.reduce_sum(tf_list[i] * tf_list[i + 1], axis=1), shape=[-1, 1]))
+    return res_list
 
 
 def sigmoid_cross_entropy_with_logits(coff_list):

@@ -8,6 +8,7 @@ class CharClassificationModel(CharModel):
     def fit(self, train_data_source_factory, eval_data_source_factory=None, train_loss_name="loss",
             eval_loss_name="loss", label_name="label", p_label_name="predict", epoch_num="epoch_num", optim_name="train_optimzer",
             char_eval_list=None):
+        res = None
         epoch_num = int(self.db[epoch_num])
         train_data_name_list = self._get_data_name_list([train_loss_name, label_name, p_label_name])
         train_data_source = train_data_source_factory(train_data_name_list)
@@ -48,7 +49,9 @@ class CharClassificationModel(CharModel):
 
                     if char_eval_list is not None:
                         res_list = [char_eval.pop() for char_eval in char_eval_list]
-                        print("epoch %d\t%s" % (epoch_index, "\t".join(res_list)))
+                        res = "epoch %d\t%s" % (epoch_index, "\t".join(res_list))
+                        print(res)
+        return res
 
     def predict(self, data_source_factory, p_label_name="predict"):
         data_name_list = self._get_data_name_list([p_label_name])
