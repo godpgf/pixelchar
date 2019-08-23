@@ -26,6 +26,7 @@ class CharModel(object):
 
     def _create_char_opt(self):
         opt_dict = {
+            "len": length,
             "adam_optim": adam_optim,
             "ftrl_optim": ftrl_optim,
             "minimize": minimize,
@@ -33,6 +34,7 @@ class CharModel(object):
             "l1_loss": l1_loss,
             "add_n": add_n,
             "dot": dot,
+            "dropout": dropout,
             "matrix": matrix,
             "array": array,
             "get": get_value,
@@ -49,6 +51,7 @@ class CharModel(object):
             "relu": relu,
             "tanh": tanh,
             "fm": fm,
+            "kernel_fm": kernel_fm,
             "ffm": ffm,
             "embed_matrix": lambda coff_list: embed_matrix(self.data_meta_dict, coff_list),
             "ffm_embed_matrix": lambda coff_list: ffm_embed_matrix(self.data_meta_dict, coff_list),

@@ -2,9 +2,19 @@ import tensorflow as tf
 from pixelchar.data import *
 
 
+def length(coff_list):
+    return len(coff_list[0][1])
+
+
 def matrix(coff_list):
     stddev = 0.02 if len(coff_list) == 1 else coff_list[1][1]
     return tf.Variable(tf.truncated_normal(shape=[int(coff) for coff in coff_list[0][1]], stddev=stddev))
+
+
+def dropout(coff_list):
+    data = coff_list[0][1]
+    coff = coff_list[1][1]
+    return tf.nn.dropout(data, coff)
 
 
 def array(coff_list):
@@ -177,6 +187,18 @@ def relu(coff_list):
 
 def tanh(coff_list):
     return tf.nn.tanh(coff_list[0][1])
+
+
+def kernel_fm(coff_list):
+    tf_list = [c for c in coff_list[0][1]]
+    kernel_mat = coff_list[1][1]
+    res_list = []
+    pid = 0
+    for i in range(0, len(tf_list) - 1):
+        for j in range(i + 1, len(tf_list)):
+            k_mat = tf.gather(kernel_mat, pid)
+            res_list.append(tf.reshape(tf.reduce_sum(tf.matmul(tf_list[i], k_mat) * tf_list[j], axis=1), shape=[-1, 1]))
+    return res_list
 
 
 def fm(coff_list):
