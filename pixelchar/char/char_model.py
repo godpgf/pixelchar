@@ -44,6 +44,7 @@ class CharModel(object):
             "embedding_lookup": embedding_lookup,
             "ffm_embedding_lookup": ffm_embedding_lookup,
             "reshape": reshape,
+            "expand_dims": expand_dims,
             "concat": concat,
             "matmul": matmul,
             "sigmoid": sigmoid,

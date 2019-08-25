@@ -68,7 +68,7 @@ class EvalDataIterator(object):
     def __init__(self, data_list, max_batch_size):
         self.read_data_num = 0
         self.data_list = data_list
-        self.batch_size = len(data_list[0]) if max_batch_size is None else max_batch_size
+        self.batch_size = len(data_list[0]) if max_batch_size is None else min(max_batch_size, len(data_list[0]))
 
     def __next__(self):
         if self.read_data_num >= len(self.data_list[0]):

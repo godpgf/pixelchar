@@ -73,6 +73,10 @@ def reshape(coff_list):
     return tf.reshape(coff_list[0][1], shape=[int(coff) for coff in coff_list[1][1]])
 
 
+def expand_dims(coff_list):
+    return tf.expand_dims(coff_list[0][1], int(coff_list[1][1]))
+
+
 def adam_optim(coff_list):
     lr = coff_list[0][1]
     return tf.train.AdamOptimizer(lr, name='Adam')
