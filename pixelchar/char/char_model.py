@@ -1,5 +1,7 @@
 from rpn import rpn_encode
-from .char_opt import *
+import tensorflow as tf
+from .char_opt import create_char_opt
+from pixelchar.data import *
 import os
 
 
@@ -16,7 +18,7 @@ class CharModel(object):
         sess_config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
         self.sess = tf.Session(graph=self.graph, config=sess_config)
         self.db = dict()
-        self.opt_dict = self._create_char_opt()
+        self.opt_dict = create_char_opt()
         self.rpn_opt_dict = {}
         self.is_load = False
         with self.sess.as_default():
@@ -24,52 +26,18 @@ class CharModel(object):
                 self._create_placeholder()
                 self._create_model(model_text)
 
-    def _create_char_opt(self):
-        opt_dict = {
-            "len": length,
-            "adam_optim": adam_optim,
-            "ftrl_optim": ftrl_optim,
-            "minimize": minimize,
-            "l2_loss": l2_loss,
-            "l1_loss": l1_loss,
-            "add_n": add_n,
-            "dot": dot,
-            "dropout": dropout,
-            "matrix": matrix,
-            "array": array,
-            "get": get_value,
-            "set": set_value,
-            "reduce_sum": reduce_sum,
-            "reduce_mean": reduce_mean,
-            "embedding_lookup": embedding_lookup,
-            "ffm_embedding_lookup": ffm_embedding_lookup,
-            "reshape": reshape,
-            "expand_dims": expand_dims,
-            "concat": concat,
-            "matmul": matmul,
-            "sigmoid": sigmoid,
-            "softmax": softmax,
-            "relu": relu,
-            "tanh": tanh,
-            "fm": fm,
-            "kernel_fm": kernel_fm,
-            "ffm": ffm,
-            "embed_matrix": lambda coff_list: embed_matrix(self.data_meta_dict, coff_list),
-            "ffm_embed_matrix": lambda coff_list: ffm_embed_matrix(self.data_meta_dict, coff_list),
-            "sigmoid_cross_entropy_with_logits": sigmoid_cross_entropy_with_logits,
-            "cross_entropy_with_logits": cross_entropy_with_logits,
-        }
-        return opt_dict
-
     def _create_placeholder(self):
         for key, value in self.data_meta_dict.items():
             if isinstance(value, ValueDataMeta):
                 self.db[key] = tf.placeholder(dtype=tf.float32 if value.value_type == 'float32' else tf.int32,
                                               shape=[None], name=key)
-            elif isinstance(value, BarDataMeta):
-                self.db[key] = tf.placeholder(dtype=tf.int32, shape=[None, value.width], name=key)
-            elif isinstance(value, SeqDataMeta):
-                self.db[key] = tf.placeholder(dtype=tf.int32, shape=[None, value.seq_length], name=key)
+            else:
+                assert isinstance(value, SeqDataMeta)
+                name = "%s_%d" % (key, value.max_item_size)
+                if value.seq_length > 0:
+                    self.db[key] = tf.placeholder(dtype=tf.int32, shape=[None, value.seq_length], name=name)
+                else:
+                    self.db[key] = tf.placeholder(dtype=tf.int32, shape=[None], name=name)
 
     def _create_model(self, model_text):
         # 通过文本来初始化模型结构
@@ -89,42 +57,44 @@ class CharModel(object):
                 v2 = coff_list.pop()
                 v1 = coff_list.pop()
                 if opt == '+':
-                    res = v1[1] + v2[1]
+                    res = v1 + v2
                 elif opt == '-':
-                    res = v1[1] - v2[1]
+                    res = v1 - v2
                 elif opt == '*':
-                    res = v1[1] * v2[1]
+                    res = v1 * v2
                 elif opt == '/':
-                    res = v1[1] / v2[1]
+                    res = v1 / v2
                 else:
-                    res = v2[1]
-                    if v1[0] == "set":
+                    assert opt == '='
+                    if isinstance(v1, tuple):
                         # 设置数组中的某个元素
-                        value_array = v1[1][0]
-                        value_index = int(v1[1][1])
-                        value_array[value_index] = res
+                        value_array = v1[0]
+                        value_index = int(v1[1])
+                        value_array[value_index] = v2
+                        res = v2
                     else:
-                        self.db[v1[0]] = res
-                coff_list.append((opt, res))
+                        self.db[v1] = v2
+                        res = v2
+                coff_list.append(res)
             elif opt == "@":
                 # 遇到函数开始标记
-                coff_list.append(("@", None))
+                coff_list.append("@")
             elif not isinstance(opt, float) and opt.startswith("@"):
                 # 如果遇到函数
                 fun_coff_list = []
-                while coff_list[-1][0] != "@":
+                while coff_list[-1] != "@":
                     fun_coff_list.append(coff_list.pop())
                 fun_coff_list.reverse()
                 coff_list.pop()
                 opt = opt[1:]
                 res = self.opt_dict[opt](fun_coff_list)
-                coff_list.append(("%s:%s" % (opt, ",".join([d[0] for d in fun_coff_list])), res))
+                coff_list.append(res)
             else:
                 # 剩下的只有操作数
                 if isinstance(opt, float):
-                    coff_list.append((str(opt), opt))
+                    coff_list.append(opt)
                 else:
-                    coff_list.append((opt, self.db.get(opt, None)))
+                    coff_list.append(self.db.get(opt, opt))
 
     def _get_data_name_list(self, res_name_list):
         name_set = set()
