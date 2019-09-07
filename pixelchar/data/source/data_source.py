@@ -38,15 +38,19 @@ class DictDataSource(DataSource):
     class DataIterator(object):
         def __init__(self, data_sour):
             self.data_sour = data_sour
-            self.batch_size = len(data_sour) if data_sour.max_batch_size is None else data_sour.max_batch_size
+            self.batch_size = data_sour.max_batch_size
             self.read_data_num = 0
 
         def __next__(self):
             if self.read_data_num >= len(self.data_sour):
                 raise StopIteration
             else:
-                res = [self.data_sour.data_dict[data_name][self.read_data_num:self.batch_size] for data_name in self.data_sour.data_name_list]
-                self.read_data_num += self.batch_size
+                if self.batch_size is not None:
+                    res = [self.data_sour.data_dict[data_name][self.read_data_num:self.batch_size] for data_name in self.data_sour.data_name_list]
+                    self.read_data_num += self.batch_size
+                else:
+                    res = [self.data_sour.data_dict[data_name][self.read_data_num] for data_name in self.data_sour.data_name_list]
+                    self.read_data_num += 1
                 return res
 
     def __init__(self, data_dict, data_name_list, max_batch_size=None):
@@ -60,5 +64,6 @@ class DictDataSource(DataSource):
         for key, value in self.data_dict.items():
             return len(value)
         return 0
+
 
 

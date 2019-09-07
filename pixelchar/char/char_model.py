@@ -97,14 +97,17 @@ class CharModel(object):
                     coff_list.append(self.db.get(opt, opt))
 
     def _get_data_name_list(self, res_name_list):
+        exclude_opt = set(["@embed_matrix", "@embed_seq_weight", "@ffm_embed_matrix"])
         name_set = set()
         finish_set = set()
         while len(res_name_list):
             res_name = res_name_list.pop()
             finish_set.add(res_name)
             if res_name in self.rpn_opt_dict:
-                for i in range(1, len(self.rpn_opt_dict[res_name])):
+                for i in range(len(self.rpn_opt_dict[res_name])-1, 0, -1):
                     opt = self.rpn_opt_dict[res_name][i]
+                    if opt in exclude_opt:
+                        break
                     if isinstance(opt, float) or opt == '+' or opt == '-' or opt == '*' or opt == '/' or opt == '=' or opt == '@' or opt.startswith(
                             '@'):
                         continue
