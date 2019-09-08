@@ -18,11 +18,15 @@ class NPYTrainDataSource(DataSource):
                 self.read_data_num += self.batch_size
                 return [data[cur_index] for data in self.data_list]
 
-    def __init__(self, path, weight_name, data_name_list, max_batch_size=None):
+    def __init__(self, data_package, weight_name, data_name_list, max_batch_size=None, index_size=100000000):
         super(NPYTrainDataSource, self).__init__(data_name_list, max_batch_size)
-        weight = np.load(path + weight_name + ".npy")
-        self.index = self.weight_2_index(weight)
-        self.data_list = [np.load(path + data_name + ".npy") for data_name in data_name_list]
+        if isinstance(data_package, dict):
+            weight = data_package[weight_name]
+            self.data_list = [data_package[data_name] for data_name in data_name_list]
+        else:
+            weight = np.load(data_package + weight_name + ".npy")
+            self.data_list = [np.load(data_package + data_name + ".npy") for data_name in data_name_list]
+        self.index = self.weight_2_index(weight, index_size)
 
     def __len__(self):
         return len(self.data_list[0])
@@ -46,9 +50,12 @@ class NPYEvalDataSource(DataSource):
                 self.read_data_num += self.batch_size
                 return v
 
-    def __init__(self, path, data_name_list, max_batch_size=None):
+    def __init__(self, data_package, data_name_list, max_batch_size=None):
         super(NPYEvalDataSource, self).__init__(data_name_list, max_batch_size)
-        self.data_list = [np.load(path + data_name + ".npy") for data_name in data_name_list]
+        if isinstance(data_package, dict):
+            self.data_list = [data_package[data_name] for data_name in data_name_list]
+        else:
+            self.data_list = [np.load(data_package + data_name + ".npy") for data_name in data_name_list]
 
     def __len__(self):
         return len(self.data_list[0])

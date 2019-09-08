@@ -26,6 +26,9 @@ class CharModel(object):
                 self._create_placeholder()
                 self._create_model(model_text)
 
+    def clear(self):
+        self.is_load = False
+
     def _create_placeholder(self):
         for key, value in self.data_meta_dict.items():
             if isinstance(value, ValueDataMeta):
