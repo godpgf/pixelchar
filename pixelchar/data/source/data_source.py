@@ -16,12 +16,10 @@ class DataSource(object):
         index = np.arange(index_size) / float(index_size)
         cur_weight_index = 0
         for i in range(len(index)):
-            if index[i] < weight[cur_weight_index]:
-                index[i] = cur_weight_index
-            else:
-                if cur_weight_index < len(weight) - 1:
-                    cur_weight_index += 1
-                index[i] = cur_weight_index
+            while index[i] >= weight[cur_weight_index] and cur_weight_index < len(weight) - 1:
+                cur_weight_index += 1
+            index[i] = cur_weight_index
+
         index = index.astype(np.int32)
         return index
 
