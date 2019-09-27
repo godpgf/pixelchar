@@ -66,16 +66,16 @@ class NPYEvalDataSource(DataSource):
 
 class NPYNegItemTrainDataSource(DataSource):
     class DataIterator(object):
-        def __init__(self, index, neg_item, neg_index, negative_sample_scale, data_list, item_data_index, max_batch_size):
+        def __init__(self, index, neg_item, neg_index, negative_sample_scale, data_list, data_cache_list,
+                     item_data_index, max_batch_size):
             self.read_data_num = 0
             self.index = index
             self.neg_item = neg_item
             self.neg_index = neg_index
             self.negative_sample_scale = negative_sample_scale
             self.data_list = data_list
+            self.data_cache_list = data_cache_list
             self.batch_size = max_batch_size
-            self.label = np.zeros((negative_sample_scale + 1) * max_batch_size)
-            self.label[:max_batch_size] = 1.0
             self.item_data_index = item_data_index
 
         def __next__(self):
@@ -83,23 +83,40 @@ class NPYNegItemTrainDataSource(DataSource):
                 raise StopIteration
             else:
                 cur_index = np.random.choice(self.index, self.batch_size, replace=True)
-                cur_neg_index = np.random.choice(self.neg_index, self.batch_size * self.negative_sample_scale, replace=True)
+                cur_neg_index = np.random.choice(self.neg_index, self.batch_size * self.negative_sample_scale,
+                                                 replace=True)
                 self.read_data_num += self.batch_size
-                res = []
+
                 for id, data in enumerate(self.data_list):
                     if id == self.item_data_index:
-                        res.append(np.concatenate((data[cur_index], self.neg_item[cur_neg_index]), axis=0))
+                        self.data_cache_list[id][:self.batch_size] = data[cur_index]
+                        self.data_cache_list[id][self.batch_size:] = self.neg_item[cur_neg_index]
                     elif data is None:
-                        res.append(self.label)
+                        pass
                     else:
-                        res.append(np.concatenate([data[cur_index]] * (self.negative_sample_scale + 1), axis=0))
-                return res
+                        p_data = data[cur_index]
+                        for i in range(self.negative_sample_scale + 1):
+                            self.data_cache_list[id][i * self.batch_size:(i + 1) * self.batch_size] = p_data
+                return self.data_cache_list
 
-    def __init__(self, path, weight_name, item_name, label_name, data_name_list, neg_power=0.25, negative_sample_scale=20, max_batch_size=None):
+    def __init__(self, path, weight_name, item_name, label_name, data_name_list, neg_power=0.25,
+                 negative_sample_scale=20, max_batch_size=None):
         super(NPYNegItemTrainDataSource, self).__init__(data_name_list, max_batch_size)
         weight = np.load(path + weight_name + ".npy")
         self.index = self.weight_2_index(weight)
-        self.data_list = [np.load(path + data_name + ".npy") if data_name != label_name else None for data_name in data_name_list]
+        self.data_list = [np.load(path + data_name + ".npy") if data_name != label_name else None for data_name in
+                          data_name_list]
+
+        label = np.zeros((negative_sample_scale + 1) * max_batch_size)
+        label[:max_batch_size] = 1.0
+        self.data_cache_list = []
+        for data in self.data_list:
+            if data is None:
+                self.data_cache_list.append(label)
+            else:
+                shape = list(data.shape)
+                shape[0] = len(label)
+                self.data_cache_list.append(np.empty(shape, data.dtype))
 
         # 得到负样本
         self.item_data_index = None
@@ -125,4 +142,5 @@ class NPYNegItemTrainDataSource(DataSource):
         return len(self.data_list[self.item_data_index])
 
     def __iter__(self):
-        return self.DataIterator(self.index, self.neg_item, self.neg_index, self.negative_sample_scale, self.data_list, self.item_data_index, self.max_batch_size)
+        return self.DataIterator(self.index, self.neg_item, self.neg_index, self.negative_sample_scale, self.data_list,
+                                 self.data_cache_list, self.item_data_index, self.max_batch_size)
