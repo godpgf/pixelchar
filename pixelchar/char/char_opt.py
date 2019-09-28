@@ -167,6 +167,18 @@ def ffm_embed_matrix(coff_list):
     return matrix_list
 
 
+def l2_normalize(coff_list):
+    v = coff_list[0]
+    dim = int(coff_list[1])
+    if isinstance(v, list):
+        r = tf.nn.l2_loss(v[0])
+        for i in range(1, len(v)):
+            r = r + tf.nn.l2_normalize(v[i], axis=dim)
+        return r
+    else:
+        return tf.nn.l2_normalize(v, axis=dim)
+
+
 def l2_loss(coff_list):
     v = coff_list[0]
     if isinstance(v, list):
@@ -306,6 +318,7 @@ def create_char_opt():
         "ftrl_optim": ftrl_optim,
         "minimize": minimize,
         "log": log,
+        "l2_normalize": l2_normalize,
         "l2_loss": l2_loss,
         "l1_loss": l1_loss,
         "add_n": add_n,
