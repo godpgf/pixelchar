@@ -100,7 +100,7 @@ class CharModel(object):
                     coff_list.append(self.db.get(opt, opt))
 
     def _get_data_name_list(self, res_name_list):
-        exclude_opt = set(["@embed_matrix", "@embed_seq_weight", "@ffm_embed_matrix"])
+        exclude_opt = set(["@embed_matrix", "@embed_seq_weight", "@ffm_embed_matrix", "@variable", "@embed_uniform_matrix"])
         name_set = set()
         finish_set = set()
         while len(res_name_list):
