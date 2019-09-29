@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import math
 
 
 def _get_max_item_size(name):
@@ -111,24 +112,26 @@ def one_hot(coff_list):
         return tf.one_hot(coff_list[0], max_item_size, 1.0, 0.0)
 
 
+def variable(coff_list):
+    value = float(coff_list[1])
+    if isinstance(coff_list[0], list):
+        v_list = []
+        for v in coff_list[0]:
+            v_list.append(tf.Variable(tf.zeros([_get_max_item_size(v.name)]) + value))
+        return v_list
+    else:
+        return tf.Variable(tf.zeros([_get_max_item_size(coff_list[0].name)]) + value)
+
+
 def _create_mat(value, embed_size, stddev):
     max_item_size = _get_max_item_size(value.name)
     return tf.Variable(
         tf.truncated_normal(shape=[max_item_size, embed_size], stddev=stddev))
-    # if isinstance(data_meta, BarDataMeta):
-    #     width = value.shape[1]
-    #     height = int(re.match(".*\((.*)\).*", value.name).group(1))
-    #     return tf.Variable(
-    #         tf.truncated_normal(shape=[width * height, embed_size], stddev=stddev))
-    # elif isinstance(data_meta, SeqDataMeta):
-    #     max_item_size = int(re.match(".*\((.*)\).*", value.name).group(1))
-    #     return tf.Variable(
-    #         tf.truncated_normal(shape=[max_item_size, embed_size], stddev=stddev))
 
 
 def embed_matrix(coff_list):
     embed_size = int(coff_list[1])
-    stddev = coff_list[2] if len(coff_list) > 2 else 0.02
+    stddev = coff_list[2] if len(coff_list) > 2 else 1.0 / math.sqrt(embed_size)
     if isinstance(coff_list[0], list):
         matrix_list = []
         for v in coff_list[0]:
@@ -136,6 +139,22 @@ def embed_matrix(coff_list):
         return matrix_list
     else:
         return _create_mat(coff_list[0], embed_size, stddev)
+
+
+def _create_uniform_mat(value, embed_size):
+    max_item_size = _get_max_item_size(value.name)
+    return tf.Variable(tf.random_uniform([max_item_size, embed_size], -1.0, 1.0))
+
+
+def embed_uniform_matrix(coff_list):
+    embed_size = int(coff_list[1])
+    if isinstance(coff_list[0], list):
+        matrix_list = []
+        for v in coff_list[0]:
+            matrix_list.append(_create_uniform_mat(v, embed_size))
+        return matrix_list
+    else:
+        return _create_uniform_mat(coff_list[0], embed_size)
 
 
 def _create_seq_weight(value):
@@ -157,7 +176,7 @@ def embed_seq_weight(coff_list):
 
 def ffm_embed_matrix(coff_list):
     embed_size = int(coff_list[1])
-    stddev = coff_list[2] if len(coff_list) > 2 else 0.02
+    stddev = coff_list[2] if len(coff_list) > 2 else 1.0 / math.sqrt(embed_size)
     value_list = coff_list[0]
     matrix_list = []
     for i in range(0, len(value_list) - 1):
@@ -199,6 +218,18 @@ def l1_loss(coff_list):
         return r
     else:
         return tf.reduce_mean(tf.abs(tf.reshape(v, [-1])), 0)
+
+
+def sampled_softmax_loss(coff_list):
+    weights = coff_list[0]
+    biases = coff_list[1]
+    inputs = coff_list[2]
+    labels = coff_list[3]
+    num_sampled = int(coff_list[4])
+    num_classes = _get_max_item_size(labels.name)
+    return tf.nn.sampled_softmax_loss(weights=weights, biases=biases, inputs=inputs,
+                                           labels=labels, num_sampled=num_sampled,
+                                           num_classes=num_classes)
 
 
 def add_n(coff_list):
@@ -321,6 +352,7 @@ def create_char_opt():
         "l2_normalize": l2_normalize,
         "l2_loss": l2_loss,
         "l1_loss": l1_loss,
+        "sampled_softmax_loss": sampled_softmax_loss,
         "add_n": add_n,
         "dot": dot,
         "dropout": dropout,
@@ -347,7 +379,9 @@ def create_char_opt():
         "kernel_fm": kernel_fm,
         "ffm": ffm,
         "one_hot": one_hot,
+        "variable": variable,
         "embed_matrix": embed_matrix,
+        "embed_uniform_matrix": embed_uniform_matrix,
         "embed_seq_weight": embed_seq_weight,
         "ffm_embed_matrix": ffm_embed_matrix,
         "sigmoid_cross_entropy_with_logits": sigmoid_cross_entropy_with_logits,
