@@ -83,6 +83,11 @@ def adam_optim(coff_list):
     return tf.train.AdamOptimizer(lr, name='Adam')
 
 
+def grad_optim(coff_list):
+    lr = coff_list[0]
+    return tf.train.GradientDescentOptimizer(lr, name='Grad')
+
+
 def ftrl_optim(coff_list):
     lr = coff_list[0]
     return tf.train.FtrlOptimizer(lr, name='Ftrl')
@@ -180,7 +185,7 @@ def ffm_embed_matrix(coff_list):
     value_list = coff_list[0]
     matrix_list = []
     for i in range(0, len(value_list) - 1):
-        for j in range(i+1, len(value_list)):
+        for j in range(i + 1, len(value_list)):
             matrix_list.append(_create_mat(value_list[i], embed_size, stddev))
             matrix_list.append(_create_mat(value_list[j], embed_size, stddev))
     return matrix_list
@@ -228,8 +233,19 @@ def sampled_softmax_loss(coff_list):
     num_sampled = int(coff_list[4])
     num_classes = _get_max_item_size(labels.name)
     return tf.nn.sampled_softmax_loss(weights=weights, biases=biases, inputs=inputs,
-                                           labels=tf.reshape(labels, [-1, 1]), num_sampled=num_sampled,
-                                           num_classes=num_classes)
+                                      labels=tf.reshape(labels, [-1, 1]), num_sampled=num_sampled,
+                                      num_classes=num_classes)
+
+
+def nce_loss(coff_list):
+    weights = coff_list[0]
+    biases = coff_list[1]
+    inputs = coff_list[2]
+    labels = coff_list[3]
+    num_sampled = int(coff_list[4])  # 负样本数
+    num_classes = _get_max_item_size(labels.name)
+    return tf.nn.nce_loss(weights=weights, biases=biases, inputs=inputs, labels=tf.reshape(labels, [-1, 1]),
+                          num_sampled=num_sampled, num_classes=num_classes)
 
 
 def add_n(coff_list):
@@ -346,12 +362,14 @@ def create_char_opt():
     opt_dict = {
         "len": length,
         "adam_optim": adam_optim,
+        "grad_optim": grad_optim,
         "ftrl_optim": ftrl_optim,
         "minimize": minimize,
         "log": log,
         "l2_normalize": l2_normalize,
         "l2_loss": l2_loss,
         "l1_loss": l1_loss,
+        "nce_loss": nce_loss,
         "sampled_softmax_loss": sampled_softmax_loss,
         "add_n": add_n,
         "dot": dot,
