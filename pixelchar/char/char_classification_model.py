@@ -11,10 +11,13 @@ class CharClassificationModel(CharModel):
             char_eval_list=None):
         res = None
         epoch_num = int(self.db[epoch_num])
-        train_data_name_list = self._get_data_name_list([train_loss_name, label_name, p_label_name])
+        fit_name_list = [train_loss_name, label_name]
+        if p_label_name is not None:
+            fit_name_list.append(p_label_name)
+        train_data_name_list = self._get_data_name_list(fit_name_list)
         train_data_source = train_data_source_factory(train_data_name_list)
-        if eval_data_source_factory is not None:
-            eval_data_name_list = self._get_data_name_list([eval_loss_name, label_name, p_label_name])
+        if eval_data_source_factory is not None and p_label_name is not None:
+            eval_data_name_list = self._get_data_name_list(fit_name_list)
             eval_data_source = eval_data_source_factory(eval_data_name_list)
         with self.sess.as_default():
             with self.graph.as_default():
@@ -25,16 +28,22 @@ class CharClassificationModel(CharModel):
                         try:
                             feed_dict = self.feed_data(train_data_iter, train_data_name_list)
                             label = feed_dict[self.db[label_name]]
-                            loss, _, predict = self.sess.run(
-                                [self.db[train_loss_name], self.db[optim_name], self.db[p_label_name]],
-                                feed_dict=feed_dict)
+                            if p_label_name is not None:
+                                loss, _, predict = self.sess.run(
+                                    [self.db[train_loss_name], self.db[optim_name], self.db[p_label_name]],
+                                    feed_dict=feed_dict)
+                            else:
+                                loss, _ = self.sess.run(
+                                    [self.db[train_loss_name], self.db[optim_name]],
+                                    feed_dict=feed_dict)
+                                predict = None
                             if eval_data_source_factory is None and char_eval_list is not None:
                                 for char_eval in char_eval_list:
                                     char_eval.push(loss, predict, label)
                         except StopIteration as e:
                             break
 
-                    if eval_data_source_factory is not None:
+                    if eval_data_source_factory is not None and p_label_name is not None:
                         eval_data_iter = iter(eval_data_source)
                         while True:
                             try:
