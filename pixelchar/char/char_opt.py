@@ -228,7 +228,7 @@ def sampled_softmax_loss(coff_list):
     num_sampled = int(coff_list[4])
     num_classes = _get_max_item_size(labels.name)
     return tf.nn.sampled_softmax_loss(weights=weights, biases=biases, inputs=inputs,
-                                           labels=labels, num_sampled=num_sampled,
+                                           labels=tf.reshape(labels, [-1, 1]), num_sampled=num_sampled,
                                            num_classes=num_classes)
 
 
