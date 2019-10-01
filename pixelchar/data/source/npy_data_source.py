@@ -79,7 +79,7 @@ class NPYNegItemTrainDataSource(DataSource):
             self.item_data_index = item_data_index
 
         def __next__(self):
-            if self.read_data_num >= len(self.data_list[0]):
+            if self.read_data_num >= len(self.data_list[self.item_data_index ]):
                 raise StopIteration
             else:
                 cur_index = np.random.choice(self.index, self.batch_size, replace=True)
