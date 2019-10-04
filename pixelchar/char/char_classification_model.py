@@ -8,17 +8,30 @@ class CharClassificationModel(CharModel):
 
     def fit(self, train_data_source_factory, eval_data_source_factory=None, train_loss_name="loss",
             eval_loss_name="loss", label_name="label", p_label_name="predict", epoch_num="epoch_num", optim_name="train_optimzer",
-            char_eval_list=None):
+            char_eval_list=None, attach_data_name_list=None):
         res = None
         epoch_num = int(self.db[epoch_num])
+
+        # 推导出为了计算train_loss_name, label_name，p_label_name所需要的数据名字
         fit_name_list = [train_loss_name, label_name]
         if p_label_name is not None:
             fit_name_list.append(p_label_name)
         train_data_name_list = self._get_data_name_list(fit_name_list)
+
+        # 除了计算需要的数据，还需要一些附加数据，用来计算一些特殊的评估指标
+        attach_data_size = 0 if attach_data_name_list is None else len(attach_data_name_list)
+        if attach_data_size > 0:
+            train_data_name_list.extend(attach_data_name_list)
+
         train_data_source = train_data_source_factory(train_data_name_list)
+
+        # 同理，得到验证需要的数据
         if eval_data_source_factory is not None and p_label_name is not None:
             eval_data_name_list = self._get_data_name_list(fit_name_list)
+            if attach_data_size > 0:
+                eval_data_name_list.extend(attach_data_name_list)
             eval_data_source = eval_data_source_factory(eval_data_name_list)
+
         with self.sess.as_default():
             with self.graph.as_default():
                 self.initialize()
@@ -26,7 +39,7 @@ class CharClassificationModel(CharModel):
                     train_data_iter = iter(train_data_source)
                     while True:
                         try:
-                            feed_dict = self.feed_data(train_data_iter, train_data_name_list)
+                            feed_dict, attach_data_list = self.feed_data(train_data_iter, train_data_name_list, attach_data_size)
                             label = feed_dict[self.db[label_name]]
                             if p_label_name is not None:
                                 loss, _, predict = self.sess.run(
@@ -39,7 +52,7 @@ class CharClassificationModel(CharModel):
                                 predict = None
                             if eval_data_source_factory is None and char_eval_list is not None:
                                 for char_eval in char_eval_list:
-                                    char_eval.push(loss, predict, label)
+                                    char_eval.push(loss, predict, label, attach_data_list)
                         except StopIteration as e:
                             break
 
@@ -47,13 +60,13 @@ class CharClassificationModel(CharModel):
                         eval_data_iter = iter(eval_data_source)
                         while True:
                             try:
-                                feed_dict = self.feed_data(eval_data_iter, eval_data_name_list)
+                                feed_dict, attach_data_list = self.feed_data(eval_data_iter, eval_data_name_list, attach_data_size)
                                 label = feed_dict[self.db[label_name]]
                                 loss, predict = self.sess.run([self.db[eval_loss_name], self.db[p_label_name]],
                                                            feed_dict=feed_dict)
                                 if char_eval_list is not None:
                                     for char_eval in char_eval_list:
-                                        char_eval.push(loss, predict, label)
+                                        char_eval.push(loss, predict, label, attach_data_list)
                             except StopIteration as e:
                                 break
 

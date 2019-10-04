@@ -6,7 +6,7 @@ class CharEval(object):
     def __init__(self):
         self.cnt = 0
 
-    def push(self, loss, predict, label):
+    def push(self, loss, predict, label, attach_data_list):
         self.cnt += 1
 
     def pop(self):
@@ -18,7 +18,7 @@ class LossCharEval(CharEval):
         super(LossCharEval, self).__init__()
         self.loss = 0.0
 
-    def push(self, loss, predict, label):
+    def push(self, loss, predict, label, attach_data_list):
         super(LossCharEval, self).push(loss, predict, label)
         # 损失
         self.loss += loss
@@ -36,7 +36,7 @@ class AUCCharEval(CharEval):
         self.label_list = []
         self.predict_list = []
 
-    def push(self, loss, predict, label):
+    def push(self, loss, predict, label, attach_data_list):
         self.label_list.append(label)
         self.predict_list.append(predict)
         super(AUCCharEval, self).push(loss, predict, label)
@@ -56,7 +56,7 @@ class HitCharEval(CharEval):
         self.tp_fp_list = [0, 0, 0, 0, 0]
         self.tp_list = [0, 0, 0, 0, 0]
 
-    def push(self, loss, predict, label):
+    def push(self, loss, predict, label, attach_data_list):
         super(HitCharEval, self).push(loss, predict, label)
         # 精确率
         for p, l in zip(predict, label):
@@ -82,7 +82,7 @@ class PrecisionCharEval(CharEval):
         self.p_list = [0.0, 0.0, 0.0, 0.0, 0.0]
         self.p_cnt_list = [0, 0, 0, 0, 0]
 
-    def push(self, loss, predict, label):
+    def push(self, loss, predict, label, attach_data_list):
         super(PrecisionCharEval, self).push(loss, predict, label)
         # 精确率
         for id, threshold in enumerate(self.threshold_list):

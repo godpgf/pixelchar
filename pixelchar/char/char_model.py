@@ -120,10 +120,16 @@ class CharModel(object):
                         res_name_list.append(opt)
         return list(name_set)
 
-    def feed_data(self, data_iter, data_name_list):
+    def feed_data(self, data_iter, data_name_list, attach_data_size):
         data_value_list = next(data_iter)
+
+        # 切分出附加数据和需要填写到模型里面的数据-------------------------------------------------
+        attach_data_list = data_name_list[-attach_data_size:] if attach_data_size > 0 else None
+        data_value_list = data_value_list[:-attach_data_size] if attach_data_size > 0 else data_value_list
+        data_name_list = data_name_list[:-attach_data_size] if attach_data_size > 0 else data_name_list
+
         feed_dict = {self.db[data_name]: data_value for data_value, data_name in zip(data_value_list, data_name_list)}
-        return feed_dict
+        return feed_dict, attach_data_list
 
     def initialize(self):
         if not self.is_load:
