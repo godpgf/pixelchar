@@ -28,7 +28,7 @@ class NPYTrainDataSource(DataSource):
             weight = np.load(data_package + weight_name + ".npy") if ids is None else \
                 np.load(data_package + weight_name + ".npy")[ids]
             self.data_list = [np.load(data_package + data_name + ".npy") if ids is None else
-                              np.load(data_package + data_name + ".npy")[ids] for data_name in data_name_list]
+                              np.copy(np.load(data_package + data_name + ".npy")[ids]) for data_name in data_name_list]
         self.index = self.weight_2_index(weight, index_size)
 
     def __len__(self):
@@ -60,7 +60,7 @@ class NPYEvalDataSource(DataSource):
                               data_name_list]
         else:
             self.data_list = [np.load(data_package + data_name + ".npy") if ids is None else
-                              np.load(data_package + data_name + ".npy")[ids] for data_name in data_name_list]
+                              np.copy(np.load(data_package + data_name + ".npy")[ids]) for data_name in data_name_list]
 
     def __len__(self):
         return len(self.data_list[0])

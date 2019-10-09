@@ -106,7 +106,9 @@ class CharModel(object):
         while len(res_name_list):
             res_name = res_name_list.pop()
             finish_set.add(res_name)
-            if res_name in self.rpn_opt_dict:
+            if res_name in self.data_meta_dict:
+                name_set.add(res_name)
+            elif res_name in self.rpn_opt_dict:
                 for i in range(len(self.rpn_opt_dict[res_name])-1, 0, -1):
                     opt = self.rpn_opt_dict[res_name][i]
                     if opt in exclude_opt:
@@ -124,7 +126,7 @@ class CharModel(object):
         data_value_list = next(data_iter)
 
         # 切分出附加数据和需要填写到模型里面的数据-------------------------------------------------
-        attach_data_list = data_name_list[-attach_data_size:] if attach_data_size > 0 else None
+        attach_data_list = data_value_list[-attach_data_size:] if attach_data_size > 0 else None
         data_value_list = data_value_list[:-attach_data_size] if attach_data_size > 0 else data_value_list
         data_name_list = data_name_list[:-attach_data_size] if attach_data_size > 0 else data_name_list
 

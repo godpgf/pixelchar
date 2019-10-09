@@ -27,6 +27,7 @@ class CharClassificationModel(CharModel):
 
         # 同理，得到验证需要的数据
         if eval_data_source_factory is not None and p_label_name is not None:
+            fit_name_list = [label_name, p_label_name]
             eval_data_name_list = self._get_data_name_list(fit_name_list)
             if attach_data_size > 0:
                 eval_data_name_list.extend(attach_data_name_list)
