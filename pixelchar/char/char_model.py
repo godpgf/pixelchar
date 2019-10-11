@@ -122,7 +122,7 @@ class CharModel(object):
                         res_name_list.append(opt)
         return list(name_set)
 
-    def feed_data(self, data_iter, data_name_list, attach_data_size):
+    def feed_data(self, data_iter, data_name_list, attach_data_size=0):
         data_value_list = next(data_iter)
 
         # 切分出附加数据和需要填写到模型里面的数据-------------------------------------------------

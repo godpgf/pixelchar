@@ -86,7 +86,8 @@ class CharClassificationModel(CharModel):
                 p_list = []
                 while True:
                     try:
-                        p_list.append(self.sess.run(self.db[p_label_name], feed_dict=self.feed_data(data_iter, data_name_list)))
+                        feed_dict, _ = self.feed_data(data_iter, data_name_list)
+                        p_list.append(self.sess.run(self.db[p_label_name], feed_dict=feed_dict))
                     except StopIteration as e:
                         break
                 return np.concatenate(p_list, axis=0)
