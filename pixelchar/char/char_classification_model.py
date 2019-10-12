@@ -91,3 +91,8 @@ class CharClassificationModel(CharModel):
                     except StopIteration as e:
                         break
                 return np.concatenate(p_list, axis=0)
+
+    def get_value(self, value_name):
+        with self.sess.as_default():
+            with self.graph.as_default():
+                return self.sess.run(self.db[value_name])

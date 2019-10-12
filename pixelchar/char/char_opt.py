@@ -146,6 +146,16 @@ def embed_matrix(coff_list):
         return _create_mat(coff_list[0], embed_size, stddev)
 
 
+def init_matrix(coff_list):
+    if isinstance(coff_list[0], list):
+        matrix_list = []
+        for p in coff_list[0]:
+            matrix_list.append(tf.Variable(np.load("%s.npy" % p), tf.float32))
+        return matrix_list
+    else:
+        return tf.Variable(np.load("%s.npy" % coff_list[0]))
+
+
 def _create_uniform_mat(value, embed_size):
     max_item_size = _get_max_item_size(value.name)
     return tf.Variable(tf.random_uniform([max_item_size, embed_size], -1.0, 1.0))
@@ -399,6 +409,7 @@ def create_char_opt():
         "one_hot": one_hot,
         "variable": variable,
         "embed_matrix": embed_matrix,
+        "init_matrix": init_matrix,
         "embed_uniform_matrix": embed_uniform_matrix,
         "embed_seq_weight": embed_seq_weight,
         "ffm_embed_matrix": ffm_embed_matrix,
