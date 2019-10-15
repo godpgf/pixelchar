@@ -7,7 +7,7 @@ class DataMeta(object):
 
     @classmethod
     def save(cls, data_meta, path):
-        data_meta_dict = {data_meta.name: data_meta for data_meta in data_meta} if isinstance(data_meta, list) else data_meta
+        data_meta_dict = {d.name: d for d in data_meta} if isinstance(data_meta, list) else data_meta
         with open(path, "wb") as f:
             pickle.dump(data_meta_dict, f)
 
