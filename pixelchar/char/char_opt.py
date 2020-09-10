@@ -177,8 +177,8 @@ def _create_seq_weight(value):
     seq_weight = np.zeros([max_item_size, max_item_size])
     for i in range(max_item_size):
         for j in range(i + 1):
-            # seq_weight[i][j] = 1 / (i + 1.0)
-            seq_weight[i][j] = 1.0
+            seq_weight[i][j] = 1 / (i + 1.0)
+            # seq_weight[i][j] = 1.0
     return tf.constant(seq_weight, dtype=tf.float32)
 
 
