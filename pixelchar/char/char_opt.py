@@ -7,6 +7,10 @@ def _get_max_item_size(name):
     return int(name.split('_')[-1].split(':')[0])
 
 
+def max_item_size(coff_list):
+    return _get_max_item_size(coff_list[0].name)
+
+
 def length(coff_list):
     return len(coff_list[0])
 
@@ -371,6 +375,7 @@ def cross_entropy_with_logits(coff_list):
 
 def create_char_opt():
     opt_dict = {
+        "max_item_size": max_item_size,
         "len": length,
         "adam_optim": adam_optim,
         "grad_optim": grad_optim,
