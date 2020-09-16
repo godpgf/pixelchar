@@ -194,6 +194,23 @@ def embed_seq_weight(coff_list):
         return _create_seq_weight(coff_list[0])
 
 
+def _create_neg_bias(value):
+    max_item_size = _get_max_item_size(value.name)
+    seq_weight = np.zeros([max_item_size, max_item_size]) - 10000.0
+    for i in range(max_item_size):
+        for j in range(i + 1):
+            seq_weight[i][j] = 0.0
+    return tf.constant(seq_weight, dtype=tf.float32)
+
+
+def embed_neg_bias(coff_list):
+    if isinstance(coff_list[0], list):
+        matrix_list = [_create_neg_bias(v) for v in coff_list[0]]
+        return matrix_list
+    else:
+        return _create_neg_bias(coff_list[0])
+
+
 def ffm_embed_matrix(coff_list):
     embed_size = int(coff_list[1])
     stddev = coff_list[2] if len(coff_list) > 2 else 1.0 / math.sqrt(embed_size)
@@ -418,6 +435,7 @@ def create_char_opt():
         "init_matrix": init_matrix,
         "embed_uniform_matrix": embed_uniform_matrix,
         "embed_seq_weight": embed_seq_weight,
+        "embed_neg_bias": embed_neg_bias,
         "ffm_embed_matrix": ffm_embed_matrix,
         "sigmoid_cross_entropy_with_logits": sigmoid_cross_entropy_with_logits,
         "cross_entropy_with_logits": cross_entropy_with_logits,

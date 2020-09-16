@@ -99,8 +99,10 @@ class CharModel(object):
                 else:
                     coff_list.append(self.db.get(opt, opt))
 
+    # 推理模型所需要的数据源名字列表
     def _get_data_name_list(self, res_name_list):
-        exclude_opt = set(["@embed_matrix", "@embed_seq_weight", "@ffm_embed_matrix", "@variable", "@embed_uniform_matrix"])
+        # 这些操作用到的数据不作为数据源（因为仅仅使用了meta信息）
+        exclude_opt = set(["@embed_matrix", "@embed_seq_weight", "@embed_neg_bias", "@ffm_embed_matrix", "@variable", "@embed_uniform_matrix"])
         name_set = set()
         finish_set = set()
         while len(res_name_list):
