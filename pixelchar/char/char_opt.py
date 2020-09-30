@@ -160,6 +160,13 @@ def init_matrix(coff_list):
         return tf.Variable(np.load("%s.npy" % coff_list[0]))
 
 
+def stop_gradient(coff_list):
+    if isinstance(coff_list[0], list):
+        return [tf.stop_gradient(p) for p in coff_list]
+    else:
+        return tf.stop_gradient(coff_list[0])
+
+
 def _create_uniform_mat(value, embed_size):
     max_item_size = _get_max_item_size(value.name)
     return tf.Variable(tf.random_uniform([max_item_size, embed_size], -1.0, 1.0))
@@ -433,6 +440,7 @@ def create_char_opt():
         "variable": variable,
         "embed_matrix": embed_matrix,
         "init_matrix": init_matrix,
+        "stop_gradient": stop_gradient,
         "embed_uniform_matrix": embed_uniform_matrix,
         "embed_seq_weight": embed_seq_weight,
         "embed_neg_bias": embed_neg_bias,
