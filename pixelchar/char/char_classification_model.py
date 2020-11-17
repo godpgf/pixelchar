@@ -1,10 +1,16 @@
 from .char_model import CharModel
 import numpy as np
+import tensorflow as tf
 
 
 class CharClassificationModel(CharModel):
     def __init__(self, data_meta_dict, model_text):
         super(CharClassificationModel, self).__init__(data_meta_dict, model_text)
+
+    def _create_placeholder(self):
+        super(CharClassificationModel, self)._create_placeholder()
+        # 关键字
+        self.db["epoch_idx"] = tf.placeholder(dtype=tf.int32, shape=None, name="epoch_idx")
 
     def fit(self, train_data_source_factory, eval_data_source_factory=None, train_loss_name="loss",
             eval_loss_name="loss", label_name="label", p_label_name="predict", epoch_num="epoch_num",
@@ -26,8 +32,10 @@ class CharClassificationModel(CharModel):
         train_data_source = train_data_source_factory(train_data_name_list)
 
         # 同理，得到验证需要的数据
-        if eval_data_source_factory is not None and p_label_name is not None:
-            fit_name_list = [label_name, p_label_name]
+        if eval_data_source_factory is not None:
+            fit_name_list = [label_name]
+            if p_label_name is not None:
+                fit_name_list.append(p_label_name)
             eval_data_name_list = self._get_data_name_list(fit_name_list)
             if attach_data_size > 0:
                 eval_data_name_list.extend(attach_data_name_list)
