@@ -83,7 +83,7 @@ class CharClassificationModel(CharModel):
                                 else:
                                     loss = self.sess.run(
                                         self.db[train_loss_name],
-                                        feed_dict=feed_dict)
+                                        feed_dict=feed_dict)[0]
                                     predict = None
                                 if char_eval_list is not None:
                                     for char_eval in char_eval_list:
