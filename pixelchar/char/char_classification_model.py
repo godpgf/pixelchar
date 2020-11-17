@@ -7,8 +7,8 @@ class CharClassificationModel(CharModel):
         super(CharClassificationModel, self).__init__(data_meta_dict, model_text)
 
     def fit(self, train_data_source_factory, eval_data_source_factory=None, train_loss_name="loss",
-            eval_loss_name="loss", label_name="label", p_label_name="predict", epoch_num="epoch_num", optim_name="train_optimzer",
-            char_eval_list=None, attach_data_name_list=None):
+            eval_loss_name="loss", label_name="label", p_label_name="predict", epoch_num="epoch_num",
+            optim_name="train_optimzer", char_eval_list=None, attach_data_name_list=None):
         res = None
         epoch_num = int(self.db[epoch_num])
 
@@ -40,7 +40,9 @@ class CharClassificationModel(CharModel):
                     train_data_iter = iter(train_data_source)
                     while True:
                         try:
-                            feed_dict, attach_data_list = self.feed_data(train_data_iter, train_data_name_list, attach_data_size)
+                            feed_dict, attach_data_list = self.feed_data(train_data_iter, train_data_name_list,
+                                                                         attach_data_size)
+                            feed_dict[self.db["epoch_idx"]] = epoch_index
                             label = feed_dict[self.db[label_name]]
                             if p_label_name is not None:
                                 loss, _, predict = self.sess.run(
@@ -61,10 +63,11 @@ class CharClassificationModel(CharModel):
                         eval_data_iter = iter(eval_data_source)
                         while True:
                             try:
-                                feed_dict, attach_data_list = self.feed_data(eval_data_iter, eval_data_name_list, attach_data_size)
+                                feed_dict, attach_data_list = self.feed_data(eval_data_iter, eval_data_name_list,
+                                                                             attach_data_size)
                                 label = feed_dict[self.db[label_name]]
                                 loss, predict = self.sess.run([self.db[eval_loss_name], self.db[p_label_name]],
-                                                           feed_dict=feed_dict)
+                                                              feed_dict=feed_dict)
                                 if char_eval_list is not None:
                                     for char_eval in char_eval_list:
                                         char_eval.push(loss, predict, label, attach_data_list)

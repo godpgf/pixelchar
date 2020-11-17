@@ -201,6 +201,30 @@ def embed_seq_weight(coff_list):
         return _create_seq_weight(coff_list[0])
 
 
+def _create_pre_boost_weight(boost_num, embed_size):
+    pre_boost_weight = np.zeros([boost_num, embed_size])
+    for i in range(boost_num):
+        for j in range(i * embed_size // boost_num):
+            pre_boost_weight[i][j] = 1.0
+    return tf.constant(pre_boost_weight, dtype=tf.float32)
+
+
+def embed_pre_boost_weight(coff_list):
+    return _create_pre_boost_weight(int(coff_list[0]), int(coff_list[1]))
+
+
+def _create_cur_boost_weight(boost_num, embed_size):
+    pre_boost_weight = np.zeros([boost_num, embed_size])
+    for i in range(boost_num):
+        for j in range(i * embed_size // boost_num, (i+1) * embed_size // boost_num):
+            pre_boost_weight[i][j] = 1.0
+    return tf.constant(pre_boost_weight, dtype=tf.float32)
+
+
+def embed_cur_boost_weight(coff_list):
+    return _create_cur_boost_weight(int(coff_list[0]), int(coff_list[1]))
+
+
 def _create_neg_bias(value):
     max_item_size = _get_max_item_size(value.name)
     seq_weight = np.zeros([max_item_size, max_item_size]) - 10000.0
@@ -357,6 +381,14 @@ def tanh(coff_list):
     return tf.nn.tanh(coff_list[0])
 
 
+def cast_int(coff_list):
+    return tf.cast(coff_list[0], dtype=tf.int32)
+
+
+def cast_float(coff_list):
+    return tf.cast(coff_list[0], dtype=tf.float32)
+
+
 def kernel_fm(coff_list):
     tf_list = [c for c in coff_list[0]]
     kernel_mat = coff_list[1]
@@ -433,6 +465,8 @@ def create_char_opt():
         "softmax": softmax,
         "relu": relu,
         "tanh": tanh,
+        "cast_int": cast_int,
+        "cast_float": cast_float,
         "fm": fm,
         "kernel_fm": kernel_fm,
         "ffm": ffm,
@@ -443,6 +477,8 @@ def create_char_opt():
         "stop_gradient": stop_gradient,
         "embed_uniform_matrix": embed_uniform_matrix,
         "embed_seq_weight": embed_seq_weight,
+        "embed_pre_boost_weight": embed_pre_boost_weight,
+        "embed_cur_boost_weight": embed_cur_boost_weight,
         "embed_neg_bias": embed_neg_bias,
         "ffm_embed_matrix": ffm_embed_matrix,
         "sigmoid_cross_entropy_with_logits": sigmoid_cross_entropy_with_logits,

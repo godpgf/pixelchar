@@ -41,6 +41,8 @@ class CharModel(object):
                     self.db[key] = tf.placeholder(dtype=tf.int32, shape=[None, value.seq_length], name=name)
                 else:
                     self.db[key] = tf.placeholder(dtype=tf.int32, shape=[None], name=name)
+        # 关键字
+        self.db["epoch_idx"] = tf.placeholder(dtype=tf.int32, shape=[None], name="epoch_idx")
 
     def _create_model(self, model_text):
         # 通过文本来初始化模型结构
