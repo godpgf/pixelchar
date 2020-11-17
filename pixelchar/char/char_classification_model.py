@@ -42,7 +42,7 @@ class CharClassificationModel(CharModel):
                         try:
                             feed_dict, attach_data_list = self.feed_data(train_data_iter, train_data_name_list,
                                                                          attach_data_size)
-                            feed_dict[self.db["epoch_idx"]] = epoch_index
+                            feed_dict[self.db["epoch_idx"]] = [epoch_index]
                             label = feed_dict[self.db[label_name]]
                             if p_label_name is not None:
                                 loss, _, predict = self.sess.run(
@@ -65,6 +65,7 @@ class CharClassificationModel(CharModel):
                             try:
                                 feed_dict, attach_data_list = self.feed_data(eval_data_iter, eval_data_name_list,
                                                                              attach_data_size)
+                                feed_dict[self.db["epoch_idx"]] = [epoch_index]
                                 label = feed_dict[self.db[label_name]]
                                 loss, predict = self.sess.run([self.db[eval_loss_name], self.db[p_label_name]],
                                                               feed_dict=feed_dict)
