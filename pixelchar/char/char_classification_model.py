@@ -36,6 +36,8 @@ class CharClassificationModel(CharModel):
             fit_name_list = [label_name]
             if p_label_name is not None:
                 fit_name_list.append(p_label_name)
+            else:
+                fit_name_list.append(train_loss_name)
             eval_data_name_list = self._get_data_name_list(fit_name_list)
             if attach_data_size > 0:
                 eval_data_name_list.extend(attach_data_name_list)
