@@ -190,7 +190,7 @@ def _create_seq_weight(value):
         for j in range(i + 1):
             seq_weight[i][j] = 1 / (i + 1.0)
             # seq_weight[i][j] = 1.0
-    return tf.constant(seq_weight, dtype=tf.float32)
+    return tf.Variable(seq_weight, dtype=tf.float32)
 
 
 def embed_seq_weight(coff_list):
