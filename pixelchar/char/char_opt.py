@@ -258,10 +258,11 @@ def l2_normalize(coff_list):
     v = coff_list[0]
     dim = int(coff_list[1])
     if isinstance(v, list):
-        r = tf.nn.l2_loss(v[0])
-        for i in range(1, len(v)):
-            r = r + tf.nn.l2_normalize(v[i], axis=dim)
-        return r
+        # r = tf.nn.l2_loss(v[0])
+        # for i in range(1, len(v)):
+        #     r = r + tf.nn.l2_normalize(v[i], axis=dim)
+        # return r
+        return [tf.nn.l2_normalize(_v, axis=dim) for _v in v]
     else:
         return tf.nn.l2_normalize(v, axis=dim)
 
