@@ -1,5 +1,6 @@
 from sklearn.metrics import roc_auc_score
 import numpy as np
+import sys
 
 
 class CharEval(object):
@@ -14,9 +15,11 @@ class CharEval(object):
 
 
 class LossCharEval(CharEval):
-    def __init__(self):
+    def __init__(self, save_call=None):
         super(LossCharEval, self).__init__()
         self.loss = 0.0
+        self.min_loss = sys.float_info.max
+        self.save_call = save_call
 
     def push(self, loss, predict, label, attach_data_list):
         super(LossCharEval, self).push(loss, predict, label, attach_data_list)
@@ -25,6 +28,10 @@ class LossCharEval(CharEval):
 
     def pop(self):
         loss = "loss: %.4f" % (self.loss / self.cnt)
+        if (self.loss / self.cnt) < self.min_loss:
+            self.min_loss = self.loss / self.cnt
+            if self.save_call:
+                self.save_call()
         self.loss = 0
         super(LossCharEval, self).pop()
         return loss
