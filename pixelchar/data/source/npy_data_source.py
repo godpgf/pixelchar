@@ -25,10 +25,10 @@ class NPYEvalDataSource(EvalDataSource):
 
 
 class NPYNegItemTrainDataSource(NegItemTrainDataSource):
-    def __init__(self, npy_path, weight_name, item_name, label_name, data_name_list, neg_power=0.25,
+    def __init__(self, npy_path, weight_name, label_name, data_name_list, neg_data_name_list, neg_power=0.25,
                  negative_sample_scale=20, max_batch_size=None):
         self.npy_path = npy_path
-        super(NPYNegItemTrainDataSource, self).__init__(weight_name, item_name, label_name, data_name_list, neg_power,
+        super(NPYNegItemTrainDataSource, self).__init__(weight_name, label_name, data_name_list, neg_data_name_list, neg_power,
                                                         negative_sample_scale, max_batch_size)
 
     def _get_weight(self, weight_name):

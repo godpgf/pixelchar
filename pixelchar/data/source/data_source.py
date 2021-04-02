@@ -44,10 +44,12 @@ class DictDataSource(DataSource):
                 raise StopIteration
             else:
                 if self.batch_size is not None:
-                    res = [self.data_sour.data_dict[data_name][self.read_data_num:self.batch_size] for data_name in self.data_sour.data_name_list]
+                    res = [self.data_sour.data_dict[data_name][self.read_data_num:self.batch_size] for data_name in
+                           self.data_sour.data_name_list]
                     self.read_data_num += self.batch_size
                 else:
-                    res = [self.data_sour.data_dict[data_name][self.read_data_num] for data_name in self.data_sour.data_name_list]
+                    res = [self.data_sour.data_dict[data_name][self.read_data_num] for data_name in
+                           self.data_sour.data_name_list]
                     self.read_data_num += 1
                 return res
 
@@ -150,20 +152,23 @@ class DictEvalDataSource(EvalDataSource):
 
 class NegItemTrainDataSource(DataSource):
     class DataIterator(object):
-        def __init__(self, index, neg_item, neg_index, negative_sample_scale, data_list, data_cache_list,
+        def __init__(self, index, neg_index, negative_sample_scale, data_list, data_cache_list,
                      item_data_index, max_batch_size):
             self.read_data_num = 0
             self.index = index
-            self.neg_item = neg_item
             self.neg_index = neg_index
             self.negative_sample_scale = negative_sample_scale
             self.data_list = data_list
             self.data_cache_list = data_cache_list
             self.batch_size = max_batch_size
             self.item_data_index = item_data_index
+            for i in range(len(self.data_list)):
+                if self.data_list[i] is not None:
+                    self.valid_id = i
+                    break
 
         def __next__(self):
-            if self.read_data_num >= len(self.data_list[self.item_data_index]):
+            if self.read_data_num >= len(self.data_list[self.valid_id]):
                 raise StopIteration
             else:
                 cur_index = np.random.choice(self.index, self.batch_size, replace=True)
@@ -172,9 +177,9 @@ class NegItemTrainDataSource(DataSource):
                 self.read_data_num += self.batch_size
 
                 for id, data in enumerate(self.data_list):
-                    if id == self.item_data_index:
+                    if id in self.item_data_index:
                         self.data_cache_list[id][:self.batch_size] = data[cur_index]
-                        self.data_cache_list[id][self.batch_size:] = self.neg_item[cur_neg_index]
+                        self.data_cache_list[id][self.batch_size:] = data[cur_neg_index]
                     elif data is None:
                         pass
                     else:
@@ -183,7 +188,7 @@ class NegItemTrainDataSource(DataSource):
                             self.data_cache_list[id][i * self.batch_size:(i + 1) * self.batch_size] = p_data
                 return self.data_cache_list
 
-    def __init__(self, weight_name, item_name, label_name, data_name_list, neg_power=0.25,
+    def __init__(self, weight_name, label_name, data_name_list, neg_data_name_list, neg_power=0.25,
                  negative_sample_scale=20, max_batch_size=None):
         super(NegItemTrainDataSource, self).__init__(data_name_list, max_batch_size)
         weight = self._get_weight(weight_name)
@@ -202,30 +207,22 @@ class NegItemTrainDataSource(DataSource):
                 self.data_cache_list.append(np.empty(shape, data.dtype))
 
         # 得到负样本
-        self.item_data_index = None
+        self.item_data_index = []
+        neg_data_name_set = set(neg_data_name_list)
         for id, data_name in enumerate(data_name_list):
-            if data_name == item_name:
-                self.item_data_index = id
-                break
-        assert self.item_data_index is not None
-        item_2_weight = {}
-        for i, w in zip(self.data_list[self.item_data_index], weight):
-            item_2_weight[i] = item_2_weight.get(i, 0.0) + w
-        neg_item = []
-        neg_weight = []
-        for i, w in item_2_weight.items():
-            neg_item.append(i)
-            neg_weight.append(w)
+            if data_name in neg_data_name_set:
+                self.item_data_index.append(id)
+        self.item_data_index = set(self.item_data_index)
 
-        self.neg_item = np.array(neg_item)
-        self.neg_index = self.weight_2_index(np.power(np.array(neg_weight), neg_power))
+        assert len(self.item_data_index) > 0
+        self.neg_index = self.weight_2_index(np.power(weight, neg_power))
         self.negative_sample_scale = negative_sample_scale
 
     def __len__(self):
         return len(self.data_list[self.item_data_index])
 
     def __iter__(self):
-        return self.DataIterator(self.index, self.neg_item, self.neg_index, self.negative_sample_scale, self.data_list,
+        return self.DataIterator(self.index, self.neg_index, self.negative_sample_scale, self.data_list,
                                  self.data_cache_list, self.item_data_index, self.max_batch_size)
 
     def _get_weight(self, weight_name):
@@ -236,10 +233,11 @@ class NegItemTrainDataSource(DataSource):
 
 
 class DictNegItemTrainDataSource(NegItemTrainDataSource):
-    def __init__(self, data_package, weight_name, item_name, label_name, data_name_list, neg_power=0.25,
+    def __init__(self, data_package, weight_name, label_name, data_name_list, neg_data_name_list, neg_power=0.25,
                  negative_sample_scale=20, max_batch_size=None):
         self.data_pacakge = data_package
-        super(DictNegItemTrainDataSource, self).__init__(weight_name, item_name, label_name, data_name_list, neg_power, negative_sample_scale, max_batch_size)
+        super(DictNegItemTrainDataSource, self).__init__(weight_name, label_name, data_name_list, neg_data_name_list,
+                                                         neg_power, negative_sample_scale, max_batch_size)
 
     def _get_weight(self, weight_name):
         return self.data_pacakge[weight_name]
