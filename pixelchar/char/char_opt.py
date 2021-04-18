@@ -103,11 +103,18 @@ def minimize(coff_list):
     return optim.minimize(value)
 
 
-def log(coff_list):
+def tf_log(coff_list):
     if isinstance(coff_list[0], list):
         return [tf.log(c) for c in coff_list[0]]
     else:
         return tf.log(coff_list[0])
+
+
+def tf_abs(coff_list):
+    if isinstance(coff_list[0], list):
+        return [tf.abs(c) for c in coff_list[0]]
+    else:
+        return tf.abs(coff_list[0])
 
 
 def one_hot(coff_list):
@@ -321,9 +328,9 @@ def dot(coff_list):
     v0 = coff_list[0]
     v1 = coff_list[1]
     if isinstance(v0, list) and isinstance(v1, list):
-        return [tf.reshape(tf.reduce_sum(v0[i] * v1[i], axis=1), shape=[-1, 1]) for i in range(len(v0))]
+        return [tf.reduce_sum(v0[i] * v1[i], axis=int(coff_list[2]) if len(coff_list) > 2 else -1, keepdims=True) for i in range(len(v0))]
     else:
-        return tf.reshape(tf.reduce_sum(v0 * v1, axis=1), shape=[-1, 1])
+        return tf.reduce_sum(v0 * v1, axis=int(coff_list[2]) if len(coff_list) > 2 else -1, keepdims=True)
 
 
 def concat(coff_list):
@@ -382,6 +389,10 @@ def tanh(coff_list):
     return tf.nn.tanh(coff_list[0])
 
 
+def exp(coff_list):
+    return tf.exp(coff_list[0])
+
+
 def cast_int(coff_list):
     return tf.cast(coff_list[0], dtype=tf.int32)
 
@@ -438,7 +449,8 @@ def create_char_opt():
         "grad_optim": grad_optim,
         "ftrl_optim": ftrl_optim,
         "minimize": minimize,
-        "log": log,
+        "log": tf_log,
+        "abs":tf_abs,
         "l2_normalize": l2_normalize,
         "l2_loss": l2_loss,
         "l1_loss": l1_loss,
@@ -466,6 +478,7 @@ def create_char_opt():
         "softmax": softmax,
         "relu": relu,
         "tanh": tanh,
+        "exp": exp,
         "cast_int": cast_int,
         "cast_float": cast_float,
         "fm": fm,
