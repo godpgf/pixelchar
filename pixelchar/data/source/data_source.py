@@ -112,6 +112,64 @@ class DictTrainDataSource(TrainDataSource):
         return [self.data_package[data_name] for data_name in self.data_name_list]
 
 
+class PairDictTrainDataSource(DataSource):
+    class PairDataIterator(object):
+        def __init__(self, pair_data_source):
+            max_batch_size = pair_data_source.max_batch_size
+            self.read_data_num = 0
+            self.pair_data_source = pair_data_source
+            self.index = np.empty(max_batch_size, np.int32)
+            self.pair_index = np.empty(max_batch_size, np.int32)
+            self.label = np.empty(max_batch_size, np.float32)
+            self.batch_size = max_batch_size
+
+        def __next__(self):
+            if self.read_data_num >= len(self.pair_data_source):
+                raise StopIteration
+            else:
+                # 随机选择flag
+                flag_batch = np.random.choice(self.pair_data_source.flag, self.batch_size, replace=True)
+                # 设置index
+                for i, flag in enumerate(flag_batch):
+                    rand_ids = np.random.choice(self.pair_data_source.flag2rand_ids[flag], 2, replace=True)
+                    ids = self.pair_data_source.flag2ids[flag][rand_ids]
+                    self.index[i] = ids[0]
+                    self.pair_index[i] = ids[1]
+                    self.label[i] = (1.0 if self.pair_data_source.rank_array[ids[0]] > self.pair_data_source.rank_array[
+                        ids[1]] else 0.0)
+
+                self.read_data_num += self.batch_size
+                return [self.label if data is None else (data[self.pair_index] if is_pair else data[self.index]) for
+                        data, is_pair in zip(self.pair_data_source.data_list, self.pair_data_source.is_pair_list)]
+
+    def __init__(self, data_package, weight_name, label_name, flag_name, rank_value_name, data_name_list,
+                 max_batch_size):
+        self.data_package = data_package
+        super(PairDictTrainDataSource, self).__init__(data_name_list, max_batch_size=max_batch_size)
+        weight_array = self._get_weight(weight_name)
+        flag_array = data_package[flag_name]
+        self.flag = np.array(list(set(flag_array.tolist())))
+        self.flag2ids = {flag: np.where(flag_array == flag)[0] for flag in self.flag}
+        self.flag2rand_ids = {flag: self.weight_2_index(weight_array[ids], len(ids) * 16) for flag, ids in
+                              self.flag2ids.items()}
+        self.data_list = self._get_data_list(label_name)
+        self.is_pair_list = [data_name.startswith("pair_") for data_name in self.data_name_list]
+        self.rank_array = data_package[rank_value_name]
+
+    def _get_weight(self, weight_name):
+        return self.data_package[weight_name]
+
+    def _get_data_list(self, label_name):
+        return [self.data_package[data_name.replace("pair_", "")] if data_name != label_name else None for data_name in
+                self.data_name_list]
+
+    def __len__(self):
+        return len(self.rank_array)
+
+    def __iter__(self):
+        return self.PairDataIterator(self)
+
+
 class EvalDataSource(DataSource):
     class DataIterator(object):
         def __init__(self, data_list, max_batch_size):
