@@ -359,9 +359,9 @@ def expand_dims(coff_list):
 
 def transpose(coff_list):
     if isinstance(coff_list[0], list):
-        return [tf.transpose(c) for c in coff_list[0]]
+        return [tf.transpose(c, perm=[int(coff) for coff in coff_list[1]]) for c in coff_list[0]]
     else:
-        return tf.transpose(coff_list[0])
+        return tf.transpose(coff_list[0], perm=[int(coff) for coff in coff_list[1]])
 
 
 def clip_by_value(coff_list):
