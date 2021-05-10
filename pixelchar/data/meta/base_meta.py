@@ -27,6 +27,17 @@ class ValueDataMeta(DataMeta):
         return ValueDataMeta(name, value_type)
 
 
+class VectorDataMeta(DataMeta):
+    def __init__(self, name, size, value_type='float32'):
+        super(VectorDataMeta, self).__init__(name)
+        self.value_type = value_type
+        self.size = size
+
+    @classmethod
+    def create_vector_data_meta(cls, name, size, value_type='float32'):
+        return VectorDataMeta(name, size, value_type)
+
+
 class SeqDataMeta(DataMeta):
     def __init__(self, name, seq_length, max_item_size):
         super(SeqDataMeta, self).__init__(name)

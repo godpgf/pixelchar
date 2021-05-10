@@ -34,6 +34,9 @@ class CharModel(object):
             if isinstance(value, ValueDataMeta):
                 self.db[key] = tf.placeholder(dtype=tf.float32 if value.value_type == 'float32' else tf.int32,
                                               shape=[None], name=key)
+            elif isinstance(value, VectorDataMeta):
+                self.db[key] = tf.placeholder(dtype=tf.float32 if value.value_type == 'float32' else tf.int32,
+                                             shape=[None, value.size], name=key)
             else:
                 assert isinstance(value, SeqDataMeta)
                 name = "%s_%d" % (key, value.max_item_size)
