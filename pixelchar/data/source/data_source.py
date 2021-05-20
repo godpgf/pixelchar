@@ -131,10 +131,21 @@ class PairDictTrainDataSource(DataSource):
                 flag_batch = np.random.choice(self.pair_data_source.flag, self.batch_size, replace=True)
                 # 设置index
                 for i, flag in enumerate(flag_batch):
-                    rand_ids = np.random.choice(self.pair_data_source.flag2rand_ids[flag], 2, replace=True)
-                    ids = self.pair_data_source.flag2ids[flag][rand_ids]
+
+                    # 随机选择差距大的两个样本，不要模棱两可
+                    ids = None
+                    max_diff = -1.0
+                    for j in range(self.pair_data_source.sample_loop_time):
+                        rand_ids = np.random.choice(self.pair_data_source.flag2rand_ids[flag], 2, replace=True)
+                        tmp_ids = self.pair_data_source.flag2ids[flag][rand_ids]
+                        diff = abs(self.pair_data_source.rank_array[ids[0]] - self.pair_data_source.rank_array[ids[1]])
+                        if diff > max_diff:
+                            max_diff = diff
+                            ids = tmp_ids
+
                     self.index[i] = ids[0]
                     self.pair_index[i] = ids[1]
+
                     self.label[i] = (1.0 if self.pair_data_source.rank_array[ids[0]] > self.pair_data_source.rank_array[
                         ids[1]] else 0.0)
 
@@ -143,7 +154,7 @@ class PairDictTrainDataSource(DataSource):
                         data, is_pair in zip(self.pair_data_source.data_list, self.pair_data_source.is_pair_list)]
 
     def __init__(self, data_package, weight_name, label_name, flag_name, rank_value_name, data_name_list,
-                 max_batch_size):
+                 max_batch_size, sample_loop_time=4):
         self.data_package = data_package
         super(PairDictTrainDataSource, self).__init__(data_name_list, max_batch_size=max_batch_size)
         weight_array = self._get_weight(weight_name)
@@ -155,6 +166,8 @@ class PairDictTrainDataSource(DataSource):
         self.data_list = self._get_data_list(label_name)
         self.is_pair_list = [data_name.startswith("pair_") for data_name in self.data_name_list]
         self.rank_array = data_package[rank_value_name]
+        # 多次取样，选择差距最大的两个样本
+        self.sample_loop_time = sample_loop_time
 
     def _get_weight(self, weight_name):
         return self.data_package[weight_name]
