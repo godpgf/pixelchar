@@ -133,15 +133,11 @@ class PairDictTrainDataSource(DataSource):
                 for i, flag in enumerate(flag_batch):
 
                     # 随机选择差距大的两个样本，不要模棱两可
-                    ids = None
-                    max_diff = -1.0
-                    for j in range(self.pair_data_source.sample_loop_time):
-                        rand_ids = np.random.choice(self.pair_data_source.flag2rand_ids[flag], 2, replace=True)
-                        tmp_ids = self.pair_data_source.flag2ids[flag][rand_ids]
-                        diff = abs(self.pair_data_source.rank_array[tmp_ids[0]] - self.pair_data_source.rank_array[tmp_ids[1]])
-                        if diff > max_diff:
-                            max_diff = diff
-                            ids = tmp_ids
+                    rand_ids = np.random.choice(self.pair_data_source.flag2rand_ids[flag], 2 * self.pair_data_source.sample_loop_time, replace=True)
+                    tmp_ids = np.reshape(self.pair_data_source.flag2ids[flag][rand_ids], [self.pair_data_source.sample_loop_time, 2])
+                    diff = np.abs(tmp_ids[:, 0] - tmp_ids[:, 1])
+                    max_id = np.argmax(diff)
+                    ids = tmp_ids[max_id, :]
 
                     self.index[i] = ids[0]
                     self.pair_index[i] = ids[1]
