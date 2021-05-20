@@ -138,7 +138,7 @@ class PairDictTrainDataSource(DataSource):
                     for j in range(self.pair_data_source.sample_loop_time):
                         rand_ids = np.random.choice(self.pair_data_source.flag2rand_ids[flag], 2, replace=True)
                         tmp_ids = self.pair_data_source.flag2ids[flag][rand_ids]
-                        diff = abs(self.pair_data_source.rank_array[ids[0]] - self.pair_data_source.rank_array[ids[1]])
+                        diff = abs(self.pair_data_source.rank_array[tmp_ids[0]] - self.pair_data_source.rank_array[tmp_ids[1]])
                         if diff > max_diff:
                             max_diff = diff
                             ids = tmp_ids
