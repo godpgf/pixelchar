@@ -135,7 +135,8 @@ class PairDictTrainDataSource(DataSource):
                     # 随机选择差距大的两个样本，不要模棱两可
                     rand_ids = np.random.choice(self.pair_data_source.flag2rand_ids[flag], 2 * self.pair_data_source.sample_loop_time, replace=True)
                     tmp_ids = np.reshape(self.pair_data_source.flag2ids[flag][rand_ids], [self.pair_data_source.sample_loop_time, 2])
-                    diff = np.abs(tmp_ids[:, 0] - tmp_ids[:, 1])
+                    rank_array = self.pair_data_source.rank_array
+                    diff = np.abs(rank_array[tmp_ids[:, 0]] - rank_array[tmp_ids[:, 1]])
                     max_id = np.argmax(diff)
                     ids = tmp_ids[max_id, :]
 
